@@ -1,4 +1,3 @@
-
 public abstract class Product {
     private String productId;
     private String name;
@@ -6,14 +5,20 @@ public abstract class Product {
     private int quantity;
 
     public Product(String productId, String name, double price, int quantity) {
-        this.productId = productId;
-        this.name = name;
+        if (productId == null || productId.trim().isEmpty()) {
+            throw new IllegalArgumentException("Product ID cannot be empty");
+        }
+        if (name == null || name.trim().isEmpty()) {
+            throw new IllegalArgumentException("Product name cannot be empty");
+        }
         if (price <= 0) {
             throw new IllegalArgumentException("Price must be greater than 0");
         }
         if (quantity < 0) {
             throw new IllegalArgumentException("Quantity cannot be negative");
         }
+        this.productId = productId.trim();
+        this.name = name.trim();
         this.price = price;
         this.quantity = quantity;
     }
@@ -61,8 +66,7 @@ public abstract class Product {
         if (quantity >= 0) {
             this.quantity = quantity;
         } else {
-            throw new IllegalArgumentException("Quantity cannot be negative");
+            System.out.println("Error: Quantity cannot be negative.");
         }
     }
 }
-

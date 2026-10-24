@@ -1,3 +1,4 @@
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -7,6 +8,7 @@ public class ReorderManager {
     private ArrayList<ReorderRequest> requests = new ArrayList<>();
     private int targetStock;
     private int nextNumber = 1;
+    private DatabaseManager databaseManager;
 
     public ReorderManager(Inventory inventory, AlertNotifier notifier, int targetStock) {
         if (targetStock <= inventory.getLowStockLimit()) {
@@ -15,6 +17,30 @@ public class ReorderManager {
         this.inventory = inventory;
         this.notifier = notifier;
         this.targetStock = targetStock;
+    }
+
+    public void setDatabaseManager(DatabaseManager databaseManager) {
+        this.databaseManager = databaseManager;
+    }
+
+    public void loadRequestsFromDb(List<ReorderRequest> loadedRequests) {
+        requests.clear();
+        int maxNum = 0;
+        if (loadedRequests != null) {
+            for (ReorderRequest req : loadedRequests) {
+                requests.add(req);
+                String id = req.getRequestId();
+                if (id != null && id.toUpperCase().startsWith("RO")) {
+                    try {
+                        int num = Integer.parseInt(id.substring(2).trim());
+                        if (num > maxNum) {
+                            maxNum = num;
+                        }
+                    } catch (NumberFormatException ignored) {}
+                }
+            }
+        }
+        this.nextNumber = maxNum + 1;
     }
 
     public int getThreshold() {
@@ -69,6 +95,15 @@ public class ReorderManager {
         ReorderRequest request = new ReorderRequest("RO" + nextNumber, product, supplier, quantity);
         nextNumber++;
         requests.add(request);
+
+        if (databaseManager != null) {
+            try {
+                databaseManager.saveReorderRequest(request);
+            } catch (SQLException e) {
+                System.err.println("Failed to persist reorder request to DB: " + e.getMessage());
+            }
+        }
+
         notifier.notifyLowStock(product, inventory.getLowStockLimit(), request);
         return request;
     }
@@ -94,6 +129,14 @@ public class ReorderManager {
         }
         inventory.restock(request.getProduct().getProductId(), request.getQuantity());
         request.markReceived();
+
+        if (databaseManager != null) {
+            try {
+                databaseManager.updateReorderRequest(request);
+            } catch (SQLException e) {
+                System.err.println("Failed to update reorder request in DB: " + e.getMessage());
+            }
+        }
     }
 
     public List<ReorderRequest> getAllRequests() {
@@ -111,13 +154,14 @@ public class ReorderManager {
     }
 
     public String requestReport() {
-        String report = "Reorder requests\n";
+        StringBuilder report = new StringBuilder("=== Purchase Reorder Requests ===\n\n");
         if (requests.isEmpty()) {
-            report += "No reorder requests yet.\n";
+            report.append("No reorder requests yet.\n");
+            return report.toString();
         }
         for (ReorderRequest r : requests) {
-            report += r + "\n";
+            report.append(r).append("\n");
         }
-        return report;
+        return report.toString();
     }
 }

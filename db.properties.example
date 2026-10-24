@@ -1,0 +1,4 @@
+# MySQL Database Configuration Example
+mysql.url=jdbc:mysql://localhost:3306/oop_inventory?serverTimezone=UTC&createDatabaseIfNotExist=true
+mysql.user=root
+mysql.password=

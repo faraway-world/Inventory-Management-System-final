@@ -9,11 +9,15 @@ public class Sale {
     private double totalAmount;
 
     public Sale(String saleId) {
+        this(saleId, new Date());
+    }
+
+    public Sale(String saleId, Date saleDate) {
         if (saleId == null || saleId.trim().isEmpty()) {
             throw new IllegalArgumentException("Sale ID cannot be empty");
         }
         this.saleId = saleId.trim();
-        this.saleDate = new Date();
+        this.saleDate = saleDate != null ? saleDate : new Date();
         this.items = new ArrayList<>();
         this.totalAmount = 0.0;
     }

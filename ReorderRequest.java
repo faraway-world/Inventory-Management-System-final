@@ -10,6 +10,11 @@ public class ReorderRequest {
     private ReorderStatus status;
 
     public ReorderRequest(String requestId, Product product, Supplier supplier, int quantity) {
+        this(requestId, product, supplier, quantity, new Date(), null, ReorderStatus.PENDING);
+    }
+
+    public ReorderRequest(String requestId, Product product, Supplier supplier, int quantity,
+                          Date requestDate, Date receivedDate, ReorderStatus status) {
         if (product == null || supplier == null) {
             throw new IllegalArgumentException("Product and supplier are required");
         }
@@ -20,8 +25,9 @@ public class ReorderRequest {
         this.product = product;
         this.supplier = supplier;
         this.quantity = quantity;
-        this.requestDate = new Date();
-        this.status = ReorderStatus.PENDING;
+        this.requestDate = requestDate != null ? requestDate : new Date();
+        this.receivedDate = receivedDate;
+        this.status = status != null ? status : ReorderStatus.PENDING;
     }
 
     public boolean isPending() {
